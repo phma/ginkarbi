@@ -1,0 +1,13 @@
+Ancescomp is a tool for preprocessing ancestry composition data from 23andMe.
+
+To compile, if you're not developing the program:
+1. Create a subdirectory build/ inside the directory where you untarred the source code.
+2. cd build
+3. cmake ..
+4. make
+
+If you are developing the program:
+1. Create a directory build/ancescomp outside the directory where you cloned the source code.
+2. cd build/ancescomp
+3. cmake <directory where the source code is>
+4. make
