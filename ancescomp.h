@@ -19,6 +19,13 @@ struct snp
   string ethnicity[2];
 };
 
+struct token
+{
+  int ch;
+  int n;
+  string str;
+};
+
 struct interval
 {
   int chromosome;
