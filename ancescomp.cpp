@@ -53,15 +53,50 @@ token readtoken()
 }
 
 void readancestry(char *ancestryname)
+/* These occur at the following braceindent levels:
+ * 1: trio, genotyped, owned, split, active, segments. Ignored.
+ * 2: north_european, eana, and other ethnic categories. They occur in no particular order and must be sorted later.
+ * 3: hap1 and hap2, which designate which chromosome of a pair.
+ * 4. chr1 through chr22 and chrX-npar. chrY and mt do not occur.
+ */
 {
   token tok;
+  int braceindent=0,bracketindent=0,i;
   ancestryfile=fopen(ancestryname,"r");
   if (ancestryfile)
   {
     while (tok.ch!=EOF)
     {
       tok=readtoken();
-      printf("%c\t%d\t%s\n",tok.ch,tok.n,tok.str.c_str());
+      switch (tok.ch)
+      {
+	case '{':
+	  braceindent++;
+	  break;
+	case '}':
+	  braceindent--;
+	  break;
+	case '[':
+	  bracketindent++;
+	  break;
+	case ']':
+	  bracketindent--;
+	  break;
+	case '"':
+	  for (i=0;i<braceindent;i++)
+	    printf("{ ");
+	  for (i=0;i<bracketindent;i++)
+	    printf("[ ");
+          printf("%s\n",tok.str.c_str());
+	  break;
+	case '0':
+	  for (i=0;i<braceindent;i++)
+	    printf("{ ");
+	  for (i=0;i<bracketindent;i++)
+	    printf("[ ");
+          printf("%d\n",tok.n);
+	  break;
+      }
     }
     fclose(ancestryfile);
   }
