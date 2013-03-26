@@ -16,7 +16,7 @@ struct snp
   int chromosome;
   int position;
   int allele;
-  string ethnicity[2];
+  int ethnicity[2];
 };
 
 struct token
@@ -30,5 +30,6 @@ struct interval
 {
   int chromosome;
   int start,end;
-  string ethnicity[2];
+  int ethnicity[2];
+  void clear();
 };

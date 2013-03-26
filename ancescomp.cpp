@@ -1,9 +1,25 @@
 // Ancestry composition preprocessor
 
 #include <cstdio>
+#include <cstdlib>
+#include <stdint.h>
+#include <map>
 #include "ancescomp.h"
+#include "ethnicity.h"
 
 FILE *ancestryfile,*genomefile;
+map<int64_t,interval> haploid[2],diploid;
+/* The longest chromosome is the first, which is 250 megabases (ee00000) long.
+ * The index is thus ccssssssseeeeeee, where c is the chromosome number (00-18,
+ * where 00=mt, 17=X, 18=Y, and 00 and 18 aren't used in the map), s is the start,
+ * and e is the end with its bits flipped.
+ */
+
+void interval::clear()
+{
+  chromosome=start=end=0;
+  ethnicity[0]=ethnicity[1]=0;
+}
 
 token readtoken()
 // Tokens are space, comma, left and right brace, left and right bracket, EOF, string, and number.
@@ -52,6 +68,15 @@ token readtoken()
   return tok;
 }
 
+int chromosomenumber(string str)
+{
+  str.erase(0,3);
+  if (str[0]=='X')
+    return 23;
+  else
+    return atoi(str.c_str());
+}
+
 void readancestry(char *ancestryname)
 /* These occur at the following braceindent levels:
  * 1: trio, genotyped, owned, split, active, segments. Ignored.
@@ -62,6 +87,10 @@ void readancestry(char *ancestryname)
 {
   token tok;
   int braceindent=0,bracketindent=0,i;
+  string ethnicity;
+  interval intvl;
+  int hap,chr,startend=0;
+  int64_t index;
   ancestryfile=fopen(ancestryname,"r");
   if (ancestryfile)
   {
@@ -78,23 +107,53 @@ void readancestry(char *ancestryname)
 	  break;
 	case '[':
 	  bracketindent++;
+	  startend=0;
 	  break;
 	case ']':
 	  bracketindent--;
+	  if (startend)
+	  {
+	    intvl.ethnicity[0]=find_ethnic(ethnicity);
+	    index=(((int64_t)chr)<<56)+(((int64_t)intvl.start)<<28)+(intvl.end^0xfffffff);
+	    if (haploid[hap][index].ethnicity[0]<=intvl.ethnicity[0])
+	      haploid[hap][index]=intvl;
+	    printf("%d %016lx [%d,%d] %s\n",hap,index,intvl.start,intvl.end,ethnicity.c_str());
+	    intvl.clear();
+	    startend=0;
+	  }
+	  break;
+	case ',':
+	  startend++;
 	  break;
 	case '"':
-	  for (i=0;i<braceindent;i++)
+	  switch (braceindent)
+	  {
+	    case 2:
+	      ethnicity=tok.str;
+	      break;
+	    case 3:
+	      hap=tok.str[3]-'1';
+	      break;
+	    case 4:
+	      chr=chromosomenumber(tok.str);
+	      break;
+	  }
+	  /*for (i=0;i<braceindent;i++)
 	    printf("{ ");
 	  for (i=0;i<bracketindent;i++)
 	    printf("[ ");
-          printf("%s\n",tok.str.c_str());
+          printf("%s\n",tok.str.c_str());*/
 	  break;
 	case '0':
-	  for (i=0;i<braceindent;i++)
+	  if (startend)
+	    intvl.end=tok.n;
+	  else
+	    intvl.start=tok.n;
+	  /*for (i=0;i<braceindent;i++)
 	    printf("{ ");
 	  for (i=0;i<bracketindent;i++)
 	    printf("[ ");
-          printf("%d\n",tok.n);
+          printf("%d\n",tok.n);*/
 	  break;
       }
     }
@@ -104,6 +163,15 @@ void readancestry(char *ancestryname)
     fprintf(stderr,"%s: could not open file\n",ancestryname);
 }
 
+void sortancestry()
+{
+  map<int64_t,interval>::iterator i,j;
+  int hap;
+  for (hap=0;hap<2;hap++)
+    for (i=haploid[hap].begin();i!=haploid[hap].end();i++)
+      printf("%d %016lx [%d,%d] %s\n",hap,i->first,i->second.start,i->second.end,ethnicities[i->second.ethnicity[0]].c_str());
+}
+      
 void usage()
 {
   printf("Usage: ancescomp ancestrydata genome\nTo get your ancestry data, bring up\n");
@@ -113,11 +181,13 @@ void usage()
 
 int main(int argc,char **argv)
 {
+  init_ethnic();
   if (argc<2 || argc>3)
     usage();
   else
   {
     readancestry(argv[1]);
+    sortancestry();
   }
   return 0;
 }
