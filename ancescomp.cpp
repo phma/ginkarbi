@@ -5,6 +5,7 @@
 #include <map>
 #include "ancescomp.h"
 #include "ethnicity.h"
+#include "snpfile.h"
 
 FILE *ancestryfile,*genomefile;
 map<int64_t,interval> haploid[2],diploid;
