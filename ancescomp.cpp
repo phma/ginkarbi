@@ -7,6 +7,9 @@
 #include "ethnicity.h"
 #include "snpfile.h"
 
+#define max(a,b) ((a>b)?(a):(b))
+#define min(a,b) ((a<b)?(a):(b))
+
 FILE *ancestryfile,*genomefile;
 map<int64_t,interval> haploid[2],diploid;
 /* The longest chromosome is the first, which is 250 megabases (ee00000) long.
@@ -175,11 +178,16 @@ void sortancestry()
   map<int64_t,interval> temploid;
   interval intvl0,intvl1;
   bool cont,split;
-  int hap;
+  int hap,chr,pos,end0,end1;
   do
   {
     for (cont=false,hap=0;hap<2;hap++)
     {
+      /*         (American)
+       * (East Asian and North American)
+       * becomes
+       * ( EANA )(American)(   EANA    )
+       */
       temploid.clear();
       for (i=haploid[hap].begin();i!=haploid[hap].end();i++)
       {
@@ -204,6 +212,73 @@ void sortancestry()
       haploid[hap]=temploid;
     }
   } while (cont);
+  diploid.clear();
+  /* hap1: (    French     )(            African                  )
+   * hap2: (            American             )(   South Asian     )
+   * becomes
+   * dip : (French/American)(African/American)(African/South Asian)
+   */
+  for (chr=pos=0,i=haploid[0].begin(),j=haploid[1].begin();i!=haploid[0].end() || j!=haploid[1].end();)
+  {
+    if (i==haploid[0].end())
+    {
+      intvl0=j->second;
+      intvl0.ethnicity[1]=intvl0.ethnicity[0];
+      intvl0.ethnicity[0]=-1;
+      j++;
+    }
+    else if (j==haploid[1].end())
+    {
+      intvl0=i->second;
+      intvl0.ethnicity[1]=-1;
+      i++;
+    }
+    else
+    {
+      if (chr<min(i->second.chromosome,j->second.chromosome))
+      {
+	chr=min(i->second.chromosome,j->second.chromosome);
+	pos=0;
+      }
+      if (pos<min(i->second.start,j->second.start))
+	pos=min(i->second.start,j->second.start);
+      intvl0.chromosome=chr;
+      intvl0.start=pos;
+      if (chr<i->second.chromosome || (chr==i->second.chromosome && pos<i->second.start))
+      {
+	intvl0.ethnicity[0]=-1;
+	end0=(chr==i->second.chromosome)?i->second.start:0x7fffffff;
+      }
+      else
+      {
+	intvl0.ethnicity[0]=i->second.ethnicity[0];
+	end0=i->second.end;
+      }
+      if (chr<j->second.chromosome || (chr==j->second.chromosome && pos<j->second.start))
+      {
+	intvl0.ethnicity[1]=-1;
+	end1=(chr==j->second.chromosome)?j->second.start:0x7fffffff;
+      }
+      else
+      {
+	intvl0.ethnicity[1]=j->second.ethnicity[0];
+	end1=j->second.end;
+      }
+      intvl0.end=min(end0,end1);
+      if (intvl0.ethnicity[0]>=0 || intvl0.ethnicity[1]>=0)
+      {
+        diploid[intvl0.index()]=intvl0;
+	printf("%d [%d,%d] %s:%s\n",intvl0.chromosome,intvl0.start,intvl0.end,
+	       (intvl0.ethnicity[0]<0)?"":ethnicities[intvl0.ethnicity[0]].c_str(),
+	       (intvl0.ethnicity[1]<0)?"":ethnicities[intvl0.ethnicity[1]].c_str());
+      }
+      pos=intvl0.end;
+      if (j->second.end<=pos || j->second.chromosome<chr)
+	j++;
+      if (i->second.end<=pos || i->second.chromosome<chr)
+	i++;
+    }
+  }
 }
       
 void usage()
