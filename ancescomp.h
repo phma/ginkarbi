@@ -1,4 +1,5 @@
 #include <string>
+#include <stdint.h>
 using namespace std;
 
 /* Bitmap for alleles:
@@ -31,5 +32,6 @@ struct interval
   int chromosome;
   int start,end;
   int ethnicity[2];
+  int64_t index();
   void clear();
 };

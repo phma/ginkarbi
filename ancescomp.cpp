@@ -2,7 +2,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <stdint.h>
 #include <map>
 #include "ancescomp.h"
 #include "ethnicity.h"
@@ -19,6 +18,11 @@ void interval::clear()
 {
   chromosome=start=end=0;
   ethnicity[0]=ethnicity[1]=0;
+}
+
+int64_t interval::index()
+{
+  return (((int64_t)chromosome)<<56)+(((int64_t)start)<<28)+(end^0xfffffff);
 }
 
 token readtoken()
@@ -114,10 +118,11 @@ void readancestry(char *ancestryname)
 	  if (startend)
 	  {
 	    intvl.ethnicity[0]=find_ethnic(ethnicity);
-	    index=(((int64_t)chr)<<56)+(((int64_t)intvl.start)<<28)+(intvl.end^0xfffffff);
+	    intvl.chromosome=chr;
+	    index=intvl.index();
 	    if (haploid[hap][index].ethnicity[0]<=intvl.ethnicity[0])
 	      haploid[hap][index]=intvl;
-	    printf("%d %016lx [%d,%d] %s\n",hap,index,intvl.start,intvl.end,ethnicity.c_str());
+	    //printf("%d %016lx [%d,%d] %s\n",hap,index,intvl.start,intvl.end,ethnicity.c_str());
 	    intvl.clear();
 	    startend=0;
 	  }
@@ -166,10 +171,38 @@ void readancestry(char *ancestryname)
 void sortancestry()
 {
   map<int64_t,interval>::iterator i,j;
+  map<int64_t,interval> temploid;
+  interval intvl0,intvl1;
+  bool cont,split;
   int hap;
-  for (hap=0;hap<2;hap++)
-    for (i=haploid[hap].begin();i!=haploid[hap].end();i++)
-      printf("%d %016lx [%d,%d] %s\n",hap,i->first,i->second.start,i->second.end,ethnicities[i->second.ethnicity[0]].c_str());
+  do
+  {
+    for (cont=false,hap=0;hap<2;hap++)
+    {
+      temploid.clear();
+      for (i=haploid[hap].begin();i!=haploid[hap].end();i++)
+      {
+	j=i;
+	j++;
+	split=false;
+	if (j!=haploid[hap].end() && j->second.end<=i->second.end && j->second.chromosome==i->second.chromosome && j->second.ethnicity[0]>i->second.ethnicity[0])
+	{
+	  split=cont=true;
+	  intvl0=intvl1=i->second;
+	  intvl0.end=j->second.start;
+	  intvl1.start=j->second.end;
+	  if (intvl0.start<intvl0.end)
+	    temploid[intvl0.index()]=intvl0;
+	  if (intvl1.start<intvl1.end)
+	    temploid[intvl1.index()]=intvl1;
+	}
+	else
+	  temploid[i->second.index()]=i->second;
+	//printf("%d %016lx [%d,%d] %s %s\n",hap,i->first,i->second.start,i->second.end,ethnicities[i->second.ethnicity[0]].c_str(),split?"(split)":"");
+      }
+      haploid[hap]=temploid;
+    }
+  } while (cont);
 }
       
 void usage()
