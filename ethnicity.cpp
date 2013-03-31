@@ -14,19 +14,24 @@ void init_ethnic()
   ethnicities.push_back("root");
   // Level 1
   ethnicities.push_back("eana"); // East Asian Native American
+  ethnicities.push_back("mena"); // Middle Eastern North African
   ethnicities.push_back("european");
   ethnicities.push_back("african"); // south of the Sahara
   // Level 2
   ethnicities.push_back("east_asian");
   ethnicities.push_back("american");
+  ethnicities.push_back("north_african");
   ethnicities.push_back("north_european");
   ethnicities.push_back("south_european");
+  ethnicities.push_back("east_european");
   ethnicities.push_back("ashkenazi");
   // Level 3
   ethnicities.push_back("british_irish");
   ethnicities.push_back("french_german");
+  ethnicities.push_back("scandinavian");
   ethnicities.push_back("iberian");
   ethnicities.push_back("italian");
+  ethnicities.push_back("balkan");
   //ethnicities.push_back("");
 }
 
