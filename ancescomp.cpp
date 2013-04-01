@@ -265,22 +265,28 @@ void sortancestry()
 	end1=j->second.end;
       }
       intvl0.end=min(end0,end1);
-      if (intvl0.ethnicity[0]>=0 || intvl0.ethnicity[1]>=0)
-      {
-        diploid[intvl0.index()]=intvl0;
-	printf("%d [%d,%d] %s:%s\n",intvl0.chromosome,intvl0.start,intvl0.end,
-	       (intvl0.ethnicity[0]<0)?"":ethnicities[intvl0.ethnicity[0]].c_str(),
-	       (intvl0.ethnicity[1]<0)?"":ethnicities[intvl0.ethnicity[1]].c_str());
-      }
       pos=intvl0.end;
       if (j->second.end<=pos || j->second.chromosome<chr)
 	j++;
       if (i->second.end<=pos || i->second.chromosome<chr)
 	i++;
     }
+    if (intvl0.ethnicity[0]>=0 || intvl0.ethnicity[1]>=0)
+    {
+      diploid[intvl0.index()]=intvl0;
+    }
   }
 }
-      
+    
+void printancestry()
+{
+  map<int64_t,interval>::iterator i;
+  for (i=diploid.begin();i!=diploid.end();i++)
+    printf("%d [%d,%d] %s:%s\n",i->second.chromosome,i->second.start,i->second.end,
+	   (i->second.ethnicity[0]<0)?"":ethnicities[i->second.ethnicity[0]].c_str(),
+	   (i->second.ethnicity[1]<0)?"":ethnicities[i->second.ethnicity[1]].c_str());
+}
+
 void usage()
 {
   printf("Usage: ancescomp ancestrydata genome\nTo get your ancestry data, bring up\n");
@@ -297,6 +303,7 @@ int main(int argc,char **argv)
   {
     readancestry(argv[1]);
     sortancestry();
+    printancestry();
   }
   return 0;
 }
