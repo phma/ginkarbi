@@ -16,4 +16,5 @@ struct interval
   int ethnicity[2];
   int64_t index();
   void clear();
+  bool in(int chrom,int pos);
 };

@@ -7,3 +7,4 @@ extern vector<string> ethnicities;
 
 void init_ethnic();
 int find_ethnic(string eth);
+string ethstr(int eth);

@@ -44,3 +44,11 @@ int find_ethnic(string eth)
   fprintf(stderr,"unknown ethnicity: %s\n",eth.c_str());
   return 0;
 }
+
+string ethstr(int eth)
+{
+  if (eth<0)
+    return "";
+  else
+    return ethnicities[eth];
+}

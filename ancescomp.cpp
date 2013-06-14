@@ -2,6 +2,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <iostream>
 #include <map>
 #include "ancescomp.h"
 #include "ethnicity.h"
@@ -28,6 +30,12 @@ int64_t interval::index()
 {
   return (((int64_t)chromosome)<<56)+(((int64_t)start)<<28)+(end^0xfffffff);
 }
+
+bool interval::in(int chrom,int pos)
+{
+  return chrom==chromosome && pos>=start && pos<end;
+}
+
 
 token readtoken()
 // Tokens are space, comma, left and right brace, left and right bracket, EOF, string, and number.
@@ -294,8 +302,29 @@ void usage()
   printf("in a web browser and save it to a file.\n");
 }
 
+void addancestry(snp &asnp)
+{
+  int64_t index;
+  map<int64_t,interval>::iterator i;
+  index=((int64_t)asnp.chromosome<<56)+((int64_t)asnp.position<<28)+((int64_t)asnp.position^0xfffffff);
+  i=diploid.lower_bound(index);
+  if (i==diploid.end() || !i->second.in(asnp.chromosome,asnp.position))
+    i--;
+  if (i->second.in(asnp.chromosome,asnp.position))
+    memmove(asnp.ethnicity,i->second.ethnicity,sizeof(asnp.ethnicity));
+  cout<<snpstring(asnp.snpname)<<"\t"<<chromstring(asnp.chromosome)<<"\t"<<posstring(asnp.position)<<"\t"<<allelestring(asnp.allele)<<"\t"<<ethstr(asnp.ethnicity[0])<<":"<<ethstr(asnp.ethnicity[1])<<endl;
+}
+
+void addancestry(vector<snp> &genome)
+{
+  int i;
+  for (i=0;i<genome.size();i++)
+    addancestry(genome[i]);
+}
+
 int main(int argc,char **argv)
 {
+  vector<snp> genome;
   init_ethnic();
   if (argc<2 || argc>3)
     usage();
@@ -303,7 +332,13 @@ int main(int argc,char **argv)
   {
     readancestry(argv[1]);
     sortancestry();
-    printancestry();
+    if (argc==3)
+    {
+      genome=readgenometextfile(argv[2]);
+      addancestry(genome);
+    }
+    else
+      printancestry();
   }
   return 0;
 }

@@ -24,6 +24,7 @@
  * The upper three bits are used internally to store uncertainty during phasing.
  */
 #include <string>
+#include <vector>
 using namespace std;
 
 extern const string calls;
@@ -34,5 +35,11 @@ struct snp
   int position;
   int allele;
   int ethnicity[2];
+  snp();
 };
 
+vector<snp> readgenometextfile(char *genomename);
+string snpstring(int snpnum);
+string chromstring(int chromnum);
+string posstring(int posnum);
+string allelestring(int allelenum);
