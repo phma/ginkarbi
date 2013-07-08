@@ -17,9 +17,12 @@ void init_ethnic()
   ethnicities.push_back("mena"); // Middle Eastern North African
   ethnicities.push_back("european");
   ethnicities.push_back("african"); // south of the Sahara
+  ethnicities.push_back("south_asian");
+  ethnicities.push_back("oceanian");
   // Level 2
   ethnicities.push_back("east_asian");
   ethnicities.push_back("american");
+  ethnicities.push_back("middle_eastern");
   ethnicities.push_back("north_african");
   ethnicities.push_back("north_european");
   ethnicities.push_back("south_european");
@@ -29,9 +32,11 @@ void init_ethnic()
   ethnicities.push_back("british_irish");
   ethnicities.push_back("french_german");
   ethnicities.push_back("scandinavian");
+  ethnicities.push_back("finnish");
   ethnicities.push_back("iberian");
   ethnicities.push_back("italian");
   ethnicities.push_back("balkan");
+  ethnicities.push_back("sardinian");
   //ethnicities.push_back("");
 }
 
